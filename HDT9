@@ -1,0 +1,72 @@
+import networkx as nx
+import heapq
+
+#Hoja de Trabajo 9 
+#Ruta mas Corta 
+#Jorge Palacios 231385 
+
+def leer_archivo_rutas(archivo):
+    grafo = nx.Graph()
+    with open(archivo, 'r') as file:
+        for linea in file:
+            origen, destino, costo = [s.strip().strip('"') for s in linea.split(',')]
+            costo = int(costo)
+            grafo.add_edge(origen, destino, weight=costo)
+            grafo.add_edge(destino, origen, weight=costo)
+    return grafo
+
+def dijkstra(grafo, origen):
+    distancias = {nodo: float('inf') for nodo in grafo.nodes()}
+    distancias[origen] = 0
+    cola = [(0, origen)]
+
+    while cola:
+        costo_actual, nodo_actual = heapq.heappop(cola)
+
+        if costo_actual > distancias[nodo_actual]:
+            continue
+
+        for vecino in grafo.neighbors(nodo_actual):
+            costo = grafo[nodo_actual][vecino]['weight']
+            nuevo_costo = distancias[nodo_actual] + costo
+
+            if nuevo_costo < distancias[vecino]:
+                distancias[vecino] = nuevo_costo
+                heapq.heappush(cola, (nuevo_costo, vecino))
+
+    return distancias
+
+def mostrar_menu_estaciones(estaciones):
+    print("Seleccione la estación de salida:")
+    for i, estacion in enumerate(estaciones, 1):
+        print(f"{i}. {estacion}")
+    print("\n------------------------------------")
+    opcion = input("Ingrese el número de la estación o \'salir' para terminar la ejecucion del programa: ")
+    return estaciones[int(opcion) - 1] if opcion != 'salir' else None
+
+def main():
+    archivo_rutas = 'Rutas.txt'
+    grafo = leer_archivo_rutas(archivo_rutas)
+
+    print("Bienvenido al sistema de rutas de autobús.")
+    print("---------------------------------------------")
+
+    
+    while True:
+        print("\nEstaciones disponibles:")
+        print("-----------------------------------")
+        estaciones = list(grafo.nodes())
+        estacion_salida = mostrar_menu_estaciones(estaciones)
+
+        if estacion_salida is None:
+            print("Gracias por usar el sistema de rutas de autobús. ¡Hasta luego!")
+            break
+
+        distancias_desde_origen = dijkstra(grafo, estacion_salida)
+
+        print("\nMejores rutas desde", estacion_salida)
+        for destino, costo in distancias_desde_origen.items():
+            if destino != estacion_salida and costo != float('inf'):
+                print(f"Hacia {destino}: Costo = {costo}")
+
+main()
